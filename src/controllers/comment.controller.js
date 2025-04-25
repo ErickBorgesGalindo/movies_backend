@@ -2,12 +2,27 @@ const pool = require("../db");
 
 // Create a new comment
 const createComment = async (req, res) => {
-  const { comment_content, movie, like_count, score, comment_date, user } =
-    req.body;
+  const {
+    comment_content,
+    movie,
+    like_count,
+    score,
+    comment_date,
+    media_type,
+    user,
+  } = req.body;
   try {
     const result = await pool.query(
-      'INSERT INTO public."Commentaries" (comment_content, movie, like_count, score, comment_date, "user") VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [comment_content, movie, like_count, score, comment_date, user]
+      'INSERT INTO public."Commentaries" (comment_content, movie, like_count, score, comment_date, media_type, "user") VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [
+        comment_content,
+        movie,
+        like_count,
+        score,
+        comment_date,
+        media_type,
+        user,
+      ]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -78,12 +93,28 @@ const getCommentsByMovieId = async (req, res) => {
 // Update a comment
 const updateComment = async (req, res) => {
   const { id } = req.params;
-  const { comment_content, movie, like_count, score, comment_date, user } =
-    req.body;
+  const {
+    comment_content,
+    movie,
+    like_count,
+    score,
+    comment_date,
+    media_type,
+    user,
+  } = req.body;
   try {
     const result = await pool.query(
-      'UPDATE "Commentaries" SET comment_content = $1, movie = $2, like_count = $3, score = $4, comment_date = $5, "user" = $6 WHERE id_comment = $7 RETURNING *',
-      [comment_content, movie, like_count, score, user, comment_date, id]
+      'UPDATE public."Commentaries" SET comment_content = $1, movie = $2, like_count = $3, score = $4, comment_date = $5, media_type = $6, "user" = $7 WHERE id_comment = $8 RETURNING *',
+      [
+        comment_content,
+        movie,
+        like_count,
+        score,
+        comment_date,
+        media_type,
+        user,
+        id,
+      ]
     );
     if (result.rows.length > 0) {
       res.json(result.rows[0]);
