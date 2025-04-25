@@ -1,6 +1,51 @@
-// filepath: /Users/erickborges/Documents/Marca_Personal/Movies-App/backend/src/controllers/user.controller.js
-
 const pool = require("../db");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
+// Login a user
+const loginUser = async (req, res) => {
+  const { user_accesName, user_pass } = req.body;
+
+  // Log the request body
+  console.log("Request received:", req.body);
+
+  try {
+    // Check if the user exists
+    const result = await pool.query(
+      'SELECT * FROM "User" WHERE user_accesName = $1',
+      [user_accesName]
+    );
+
+    if (result.rows.length === 0) {
+      console.log("User not found");
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const user = result.rows[0];
+
+    // Verify the password
+    const isPasswordValid = await bcrypt.compare(user_pass, user.user_pass);
+    if (!isPasswordValid) {
+      console.log("Invalid credentials");
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // Generate a JWT token
+    const token = jwt.sign(
+      { id_user: user.id_user, user_accesName: user.user_accesName },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    // Log the response
+    console.log("Login successful:", { message: "Login successful", token });
+
+    res.json({ message: "Login successful", token });
+  } catch (error) {
+    console.error("Error logging in:", error);
+    res.status(500).json({ error: "Error logging in" });
+  }
+};
 
 // Create a new user
 const createUser = async (req, res) => {
@@ -15,7 +60,11 @@ const createUser = async (req, res) => {
     liked_movies,
     commentaries,
   } = req.body;
+
   try {
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(user_pass, 10);
+
     const result = await pool.query(
       `INSERT INTO "User" 
             (user_name, user_lastname, user_accesName, user_mail, user_description, user_location, user_pass, liked_movies, commentaries) 
@@ -27,7 +76,7 @@ const createUser = async (req, res) => {
         user_mail,
         user_description,
         user_location,
-        user_pass,
+        hashedPassword,
         liked_movies,
         commentaries,
       ]
@@ -199,4 +248,5 @@ module.exports = {
   deleteUser,
   getUsersWithCommentCount,
   getUserWithCommentCountById,
+  loginUser,
 };
