@@ -7,6 +7,7 @@ const router = Router();
 
 router.post("/user", userController.createUser);
 router.post("/login", loginUser);
+router.post("/check-username", userController.checkUsernameAvailability);
 router.get("/user", userController.getAllUsers);
 router.get("/user/:id", userController.getUserById);
 router.get("/user-with-comments", userController.getUsersWithCommentCount);

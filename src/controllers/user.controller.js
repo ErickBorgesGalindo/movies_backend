@@ -66,7 +66,7 @@ const createUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(user_pass, 10);
 
     const result = await pool.query(
-      `INSERT INTO "User" 
+      `INSERT INTO public."User" 
             (user_name, user_lastname, user_accesName, user_mail, user_description, user_location, user_pass, liked_movies, commentaries) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
       [
@@ -222,6 +222,27 @@ const getUserWithCommentCountById = async (req, res) => {
   }
 };
 
+// Check if a username is available
+const checkUsernameAvailability = async (req, res) => {
+  const { user_accesName } = req.body;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM public."User" WHERE user_accesName = $1',
+      [user_accesName]
+    );
+
+    if (result.rows.length > 0) {
+      res.json({ available: false, message: "Username is already taken" });
+    } else {
+      res.json({ available: true, message: "Username is available" });
+    }
+  } catch (error) {
+    console.error("Error checking username availability:", error);
+    res.status(500).json({ error: "Error checking username availability" });
+  }
+};
+
 // Delete a user
 const deleteUser = async (req, res) => {
   const { id } = req.params;
@@ -249,4 +270,5 @@ module.exports = {
   getUsersWithCommentCount,
   getUserWithCommentCountById,
   loginUser,
+  checkUsernameAvailability
 };
